@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 app = Flask(__name__)
+MIN_PASSWORD_LENGTH = 8
 
 # Check for environment variable
 if not os.getenv('DATABASE_URL'):
@@ -39,9 +40,12 @@ def index():
         else:
             if db.execute('SELECT * FROM users WHERE username = :username',
             {'username':username}).rowcount == 0:
-                db.execute('INSERT INTO users(username, password) VALUES (:username, :password)', {'username':username, 'password':password})
-                db.commit()
-                return render_template('success.html')
+                if len(password) < MIN_PASSWORD_LENGTH:
+                    return render_template('error.html', message=f'Password should be at least {MIN_PASSWORD_LENGTH} characters long')
+                else:
+                    db.execute('INSERT INTO users(username, password) VALUES (:username, :password)', {'username':username, 'password':password})
+                    db.commit()
+                    return render_template('success.html')
             else:
                 return render_template('error.html', message=f'The user "{username}" has already been taken.')
         #print(f'posted online {session["username"]} {session["password"]} {request.form.get("button")}')
