@@ -1,0 +1,32 @@
+{%extends "layout.html"%}
+
+{%block title%}
+  GoodReviews
+{%endblock%}
+
+{%block heading%}
+  <h2>GoodReviews</h2>
+{%endblock%}
+
+{%block body%}
+  <h3>Qué pedo que pex</h3>
+  <nav class="navbar navbar-light bg-light">
+    <a class="navbar-brand">Navbar</a>
+    <form action="{{url_for('home')}}" class="form-inline" method="post">
+      <input class="form-control mr-sm-2" name="book" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-success my-2 my-sm-0" name="button" value="search" type="submit">Search</button>
+    </form>
+  </nav>
+  <form action="{{url_for('index')}}" method="post">
+    <div class="form-group">
+      <button class="btn btn-outline-primary" name="button" value="log_out">log out</button>
+    </div>
+  </form>
+  <ul>
+    {%for book in books%}
+    <li><a href="{{url_for('book', isbn=book.isbn)}}">{{book}}</a></li>
+    {%else%}
+    No books found.
+    {%endfor%}
+  </ul>
+{%endblock%}
