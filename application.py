@@ -1,4 +1,5 @@
 import os
+import requests
 
 from flask import Flask, session, render_template, request
 from flask_session import Session
@@ -30,7 +31,7 @@ def index():
         session['password'] = ""
         return render_template('index.html')
 
-    if request.method == 'GET' and session['id'] is not None:
+    if request.method == 'GET' and session.get('id') is not None:
         return render_template('home.html')
     return render_template('index.html')
 
@@ -49,7 +50,6 @@ def home():
                 session['username'] = user.username
                 session['password'] = user.password
                 return render_template('home.html')
-                print(f'user_id: {session["id"]}, username: {session["username"]}, password: {session["password"]}')
         elif request.form.get('button') == 'sign_up':
             if db.execute('SELECT * FROM users WHERE username = :username',
             {'username':username}).rowcount == 0:
@@ -64,19 +64,31 @@ def home():
         elif request.form.get('button') == 'search':
             pattern = request.form.get('book')
             filtered_books = []
-            print('searcheando')
             if len(pattern) >= 0:
                 books = db.execute('SELECT * FROM books').fetchall()
                 for book in books:
                     if pattern in book.isbn or pattern in book.title or pattern in book.author:
                         filtered_books.append(book)
-                        print(f'isbn: {book.isbn} title: {book.title} author: {book.author} year: {book.year}')
-                return render_template('home.html', books=filtered_books)
-        #print(f'posted online {session["username"]} {session["password"]} {request.form.get("button")}')
+                return render_template('home.html', books=filtered_books, message='No books found.')
     return render_template('home.html')
 
-@app.route('/book/<string:isbn>')
+@app.route('/book/<string:isbn>', methods=['GET','POST'])
 def book(isbn):
     isbn = isbn.zfill(10)
     book = db.execute('SELECT * FROM books WHERE isbn=:isbn', {'isbn':isbn}).fetchone()
-    return render_template('book.html', book=book)
+    goodreads_data = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "z2OYZnE8iD5zVH7WhIr8GA", "isbns": isbn})
+
+    if request.method == 'POST':
+        if session.get('id') is None:
+            return render_template('error.html', message='You must be logged before rating')
+        else:
+            rating = int(request.form.get('rating_select'))
+            review = request.form.get('review_text')
+            print(f'rating{rating} review{review}')
+            if db.execute('SELECT * FROM reviews WHERE book_id=:book_id AND user_id=:user_id', {'book_id':book.id, 'user_id':session['id']}).rowcount == 0:
+                db.execute('INSERT INTO reviews(rating, text, book_id, user_id) VALUES(:rating, :text, :book_id, :user_id)', {'rating':rating, 'text':review, 'book_id':book.id, 'user_id':session['id']})
+                db.commit()
+            else:
+                return render_template('error.html', message=f'You have already made a review for {book.title}')
+
+    return render_template('book.html', book=book, goodreads_data=(goodreads_data.json())['books'][0])

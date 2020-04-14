@@ -26,7 +26,7 @@
     {%for book in books%}
     <li><a href="{{url_for('book', isbn=book.isbn)}}">{{book}}</a></li>
     {%else%}
-    No books found.
+      {{message}}
     {%endfor%}
   </ul>
 {%endblock%}
