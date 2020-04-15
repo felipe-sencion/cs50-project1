@@ -1,5 +1,6 @@
 import os
 import requests
+import random
 
 from flask import Flask, session, render_template, request, jsonify
 from flask_session import Session
@@ -32,7 +33,9 @@ def index():
         return render_template('index.html')
 
     if request.method == 'GET' and session.get('id') is not None:
-        return render_template('home.html')
+        start = random.randint(1, 4950)
+        books = db.execute('SELECT * FROM books WHERE books.id > :book_id LIMIT 50', {'book_id':start}).fetchall()
+        return render_template('home.html', books=books)
     return render_template('index.html')
 
 @app.route('/home', methods=['POST'])
@@ -49,7 +52,9 @@ def home():
                 session['id'] = user.id
                 session['username'] = user.username
                 session['password'] = user.password
-                return render_template('home.html')
+                start = random.randint(1, 4950)
+                books = db.execute('SELECT * FROM books WHERE books.id > :book_id LIMIT 50', {'book_id':start}).fetchall()
+                return render_template('home.html', books=books)
         elif request.form.get('button') == 'sign_up':
             if db.execute('SELECT * FROM users WHERE username = :username',
             {'username':username}).rowcount == 0:

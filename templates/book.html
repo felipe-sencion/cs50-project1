@@ -5,42 +5,56 @@
 {%endblock%}
 
 {%block heading%}
-  Book
+  <h2>{{book.title}}</h2>
 {%endblock%}
 
 {%block body%}
-  title {{book.title}}
-  author {{book.author}}
-  isbn {{book.isbn}}
-  year {{book.year}}
-  {% if goodreads_data['average_rating'] != '' %}
-  <h3>From GoodReads</h3>
-  <ul>
-    <li>Ratings count: {{goodreads_data['ratings_count']}}</li>
-    <li>Ratings average: {{goodreads_data['average_rating']}}</li>
-  </ul>
-  {%endif%}
-  <h1>What good-reviewers say about {{book.title}}</h1>
-  <ul>
-    {%for review in reviews%}
-      <li>{{review.text}}</li>
-    {%endfor%}
-  </ul>
-  <form action="{{url_for('book', isbn=book.isbn)}}" method="post">
-    <div class="form-group">
-      <label for="rating_select">Rate this book:</label>
-      <select class="form-control" name="rating_select">
-        {% for i in range(5)%}
-        <option value={{i+1}}>{{i+1}}</option>
-        {%endfor%}
-      </select>
+  <div class="book-card">
+    <div class="card-body">
+      <h4 class="card-title">About the book</h4>
+      <hr>
+      <p class="card-text">Title: {{book.title}}</p>
+      <p class="card-text">Author: {{book.author}}</p>
+      <p class="card-text">isbn: {{book.isbn}}</p>
+      <p class="card-text">Year: {{book.year}}</p>
+      {% if goodreads_data['average_rating'] != '' %}
+        <hr>
+        <h5 class="card-title">From GoodReads.com</h5>
+        <ul>
+          <li>Ratings count: {{goodreads_data['ratings_count']}}</li>
+          <li>Ratings average: {{goodreads_data['average_rating']}}</li>
+        </ul>
+      {%endif%}
     </div>
-    <div class="form-group">
-      <label for="review_text">Write a review</label>
-      <textarea class="form-control" name="review_text" rows="8"></textarea>
+  </div>
+  <div class="review">
+    <h4>Your Review</h4>
+    <div class="review-block">
+      <form action="{{url_for('book', isbn=book.isbn)}}" method="post">
+        <div class="form-group">
+          <label for="rating_select">Rate this book:</label>
+          <select class="form-control" name="rating_select">
+            {% for i in range(5)%}
+            <option value={{i+1}}>{{i+1}}</option>
+            {%endfor%}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="review_text">Write a review</label>
+          <textarea class="form-control" name="review_text" rows="8"></textarea>
+        </div>
+        <div class="form-group">
+          <button class="btn btn-outline-primary" name="button" value="submit" type="submit">Submit</button>
+        </div>
+      </form>
     </div>
-    <div class="form-group">
-      <button class="btn btn-outline-primary" name="button" value="submit" type="submit">Submit</button>
-    </div>
-  </form>
+  </div>
+  <div class="good-reviews">
+    <h4>What good-reviewers say about {{book.title}}</h4>
+    <ul>
+      {%for review in reviews%}
+        <li>{{review.text}}</li>
+      {%endfor%}
+    </ul>
+  </div>
 {%endblock%}
