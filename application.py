@@ -1,7 +1,7 @@
 import os
 import requests
 
-from flask import Flask, session, render_template, request
+from flask import Flask, session, render_template, request, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -76,7 +76,10 @@ def home():
 def book(isbn):
     isbn = isbn.zfill(10)
     book = db.execute('SELECT * FROM books WHERE isbn=:isbn', {'isbn':isbn}).fetchone()
+    if book is None:
+        return render_template('error.html', message='Oops wrong isbn'), 404
     goodreads_data = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "z2OYZnE8iD5zVH7WhIr8GA", "isbns": isbn})
+    reviews = db.execute('SELECT * FROM reviews WHERE book_id=:book_id', {'book_id':book.id}).fetchall()
 
     if request.method == 'POST':
         if session.get('id') is None:
@@ -91,4 +94,25 @@ def book(isbn):
             else:
                 return render_template('error.html', message=f'You have already made a review for {book.title}')
 
-    return render_template('book.html', book=book, goodreads_data=(goodreads_data.json())['books'][0])
+    return render_template('book.html', book=book, goodreads_data=(goodreads_data.json())['books'][0], reviews=reviews)
+
+@app.route('/api/book/<string:isbn>', methods=['GET'])
+def book_api(isbn):
+    isbn = isbn.zfill(10)
+    book = db.execute('SELECT * FROM books WHERE isbn=:isbn', {'isbn':isbn}).fetchone()
+
+    if book is None:
+        return render_template('error.html', message='Oops wrong isbn'), 404
+
+    review = goodreads_data = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "z2OYZnE8iD5zVH7WhIr8GA", "isbns": isbn})
+    review_json = review.json()['books'][0]
+    return jsonify(
+    {
+        'title': book.title,
+        'author': book.author,
+        'year': book.year,
+        'isbn': book.isbn,
+        'review_count': review_json['reviews_count'],
+        'average_score': review_json['average_rating']
+    }
+    )

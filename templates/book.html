@@ -20,6 +20,12 @@
     <li>Ratings average: {{goodreads_data['average_rating']}}</li>
   </ul>
   {%endif%}
+  <h1>What good-reviewers say about {{book.title}}</h1>
+  <ul>
+    {%for review in reviews%}
+      <li>{{review.text}}</li>
+    {%endfor%}
+  </ul>
   <form action="{{url_for('book', isbn=book.isbn)}}" method="post">
     <div class="form-group">
       <label for="rating_select">Rate this book:</label>
